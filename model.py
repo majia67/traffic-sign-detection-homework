@@ -18,8 +18,8 @@ class Net(nn.Module):
 
     def forward(self, x):
         p1 = F.max_pool2d(self.conv1_drop(F.relu(self.conv1(x))), 2)
-        p2 = F.max_pool2d(self.conv2_drop(F.relu(self.conv2(x))), 2)
-        p3 = F.max_pool2d(self.conv3_drop(F.relu(self.conv3(x))), 2)
+        p2 = F.max_pool2d(self.conv2_drop(F.relu(self.conv2(p1))), 2)
+        p3 = F.max_pool2d(self.conv3_drop(F.relu(self.conv3(p2))), 2)
 
         p1 = F.max_pool2d(p1, 4)
         p1 = p1.view(-1, 512)
@@ -28,8 +28,7 @@ class Net(nn.Module):
         p3 = p3.view(-1, 2048)
 
         x = torch.cat((p1, p2, p3), 1)
-        print(x.size())
         x = F.relu(self.fc1(x))
         x = F.dropout(x, training=self.training)
         x = self.fc2(x)
-        return F.log_softmax(x)
+        return F.log_softmax(x, dim=1)
