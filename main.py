@@ -4,7 +4,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-from torchvision import datasets, transforms
+from torch.optim.lr_scheduler import StepLR
+from torchvision import datasets, models, transforms
 from torch.autograd import Variable
 
 # Training settings
@@ -27,6 +28,8 @@ args = parser.parse_args()
 
 torch.manual_seed(args.seed)
 
+CUDA = torch.cuda.is_available()
+
 ### Data Initialization and Loading
 from data import initialize_data, data_transforms # data.py in the same folder
 initialize_data(args.data) # extracts the zip files, makes a validation set
@@ -44,13 +47,19 @@ val_loader = torch.utils.data.DataLoader(
 # We define neural net in model.py so that it can be reused by the evaluate.py script
 from model import Net
 model = Net()
+if CUDA:
+    model.cuda()
 
 optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
+scheduler = StepLR(optimizer, step_size=10, gamma=0.95)
 
 def train(epoch):
     model.train()
     for batch_idx, (data, target) in enumerate(train_loader):
         data, target = Variable(data), Variable(target)
+        if CUDA:
+            data = data.cuda()
+            target = target.cuda()
         optimizer.zero_grad()
         output = model(data)
         loss = F.nll_loss(output, target)
@@ -67,6 +76,9 @@ def validation():
     correct = 0
     for data, target in val_loader:
         data, target = Variable(data, volatile=True), Variable(target)
+        if CUDA:
+            data = data.cuda()
+            target = target.cuda()
         output = model(data)
         validation_loss += F.nll_loss(output, target, size_average=False).data[0] # sum up batch loss
         pred = output.data.max(1, keepdim=True)[1] # get the index of the max log-probability
@@ -77,10 +89,9 @@ def validation():
         validation_loss, correct, len(val_loader.dataset),
         100. * correct / len(val_loader.dataset)))
 
-
 for epoch in range(1, args.epochs + 1):
     train(epoch)
     validation()
-    model_file = 'model_' + str(epoch) + '.pth'
+    model_file = 'models/model_' + str(epoch) + '.pth'
     torch.save(model.state_dict(), model_file)
     print('\nSaved model to ' + model_file + '. You can run `python evaluate.py ' + model_file + '` to generate the Kaggle formatted csv file')
