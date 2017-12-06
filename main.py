@@ -51,7 +51,7 @@ if CUDA:
     model.cuda()
 
 optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
-scheduler = StepLR(optimizer, step_size=10, gamma=0.95)
+scheduler = StepLR(optimizer, step_size=20, gamma=0.5)
 
 def train(epoch):
     model.train()
@@ -89,9 +89,17 @@ def validation():
         validation_loss, correct, len(val_loader.dataset),
         100. * correct / len(val_loader.dataset)))
 
+    return correct
+
+best = 0
+curBestEpoch = 0
 for epoch in range(1, args.epochs + 1):
     train(epoch)
-    validation()
+    correct = validation()
+    if correct > best:
+        best = correct
+        curBestEpoch = epoch
     model_file = 'models/model_' + str(epoch) + '.pth'
     torch.save(model.state_dict(), model_file)
     print('\nSaved model to ' + model_file + '. You can run `python evaluate.py ' + model_file + '` to generate the Kaggle formatted csv file')
+    print('Current best epoch:', curBestEpoch);
