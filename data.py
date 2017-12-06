@@ -10,10 +10,10 @@ import torchvision.transforms as transforms
 # the training set
 # Transform the image to grayscale version according Pierre Sermanet and Yann LeCun's paper
 data_transforms = transforms.Compose([
-    transforms.Scale((32, 32)),
+    transforms.Grayscale(),
+    transforms.Resize((32, 32)),
     transforms.ToTensor(),
     transforms.Normalize((0.3337, 0.3064, 0.3171), ( 0.2672, 0.2564, 0.2629)),
-    transforms.Grayscale(),
 ])
 
 
