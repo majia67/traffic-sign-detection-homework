@@ -50,9 +50,9 @@ model = Net()
 if CUDA:
     model.cuda()
 
-# optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
-optimizer = optim.Adam(model.parameters(), lr=args.lr)
-scheduler = StepLR(optimizer, step_size=100, gamma=0.5)
+optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
+# optimizer = optim.Adam(model.parameters(), lr=args.lr)
+scheduler = StepLR(optimizer, step_size=100, gamma=0.9)
 
 def train(epoch):
     model.train()
@@ -63,7 +63,7 @@ def train(epoch):
             target = target.cuda()
         optimizer.zero_grad()
         output = model(data)
-        loss = F.nll_loss(output, target)
+        loss = F.cross_entropy(output, target)
         loss.backward()
         optimizer.step()
         if batch_idx % args.log_interval == 0:
@@ -81,7 +81,7 @@ def validation():
             data = data.cuda()
             target = target.cuda()
         output = model(data)
-        validation_loss += F.nll_loss(output, target, size_average=False).data[0] # sum up batch loss
+        validation_loss += F.cross_entropy(output, target, size_average=False).data[0] # sum up batch loss
         pred = output.data.max(1, keepdim=True)[1] # get the index of the max log-probability
         correct += pred.eq(target.data.view_as(pred)).cpu().sum()
 

@@ -8,10 +8,8 @@ import torchvision.transforms as transforms
 # by default, we resize the images to 32 x 32 in size
 # and normalize them to mean = 0 and standard-deviation = 1 based on statistics collected from
 # the training set
-# Transform the image to grayscale version according Pierre Sermanet and Yann LeCun's paper
 data_transforms = transforms.Compose([
-    transforms.Grayscale(),
-    transforms.Resize((32, 32)),
+    transforms.Resize((224, 224)),
     transforms.ToTensor(),
     transforms.Normalize((0.3337, 0.3064, 0.3171), ( 0.2672, 0.2564, 0.2629)),
 ])
